@@ -1,167 +1,132 @@
-:root {
-    --primary: #2c3e50;
-    --secondary: #e51937; /* ESPN Red */
-    --accent: #f39c12;
-    --light: #f8f9fa;
-    --dark: #212529;
-}
+// Configuration
+const API_ENDPOINT = "/api/espn";
+const REFRESH_INTERVAL = 30000; // 30 seconds
+let lastUpdateTime = null;
 
-body {
-    font-family: 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    background: var(--light);
-    color: var(--dark);
-    margin: 0;
-}
+// DOM Elements
+const elements = {
+    liveMatches: document.getElementById("live-matches"),
+    upcomingMatches: document.getElementById("upcoming-matches"),
+    lastUpdated: document.getElementById("last-updated"),
+    loading: document.getElementById("loading")
+};
 
-.container {
-    width: 95%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+    fetchScores();
+    setInterval(fetchScores, REFRESH_INTERVAL);
+});
 
-header {
-    background: var(--primary);
-    color: white;
-    padding: 20px 0;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-.logo {
-    height: 60px;
-    margin-bottom: 10px;
-}
-
-h1 {
-    font-size: 2rem;
-    margin: 0;
-}
-
-.last-updated {
-    font-size: 0.9rem;
-    opacity: 0.8;
-}
-
-/* Matches Container */
-.matches-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-
-.match-card {
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.2s;
-}
-
-.match-card:hover {
-    transform: translateY(-3px);
-}
-
-.match-header {
-    padding: 12px;
-    background: var(--primary);
-    color: white;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.match-teams {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.team {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.team-logo {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-}
-
-.match-status {
-    font-size: 0.8rem;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: var(--secondary);
-}
-
-.match-details {
-    padding: 12px;
-}
-
-.score {
-    font-weight: bold;
-    margin-bottom: 8px;
-}
-
-.venue, .match-date {
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.live-indicator {
-    color: var(--secondary);
-    margin-right: 8px;
-}
-
-/* Ad Styles */
-.ad-banner {
-    background: #f1f1f1;
-    padding: 15px;
-    margin: 25px 0;
-    text-align: center;
-    border-radius: 8px;
-}
-
-.ad-placeholder {
-    max-width: 100%;
-    border-radius: 4px;
-}
-
-/* Loading and Error States */
-.loading {
-    text-align: center;
-    padding: 30px;
-    grid-column: 1 / -1;
-}
-
-.error {
-    text-align: center;
-    padding: 20px;
-    color: var(--secondary);
-    grid-column: 1 / -1;
-}
-
-.retry-btn {
-    background: var(--secondary);
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .matches-container {
-        grid-template-columns: 1fr;
+// Fetch scores from our serverless function
+async function fetchScores() {
+    try {
+        showLoading();
+        const response = await fetch(API_ENDPOINT);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        processData(data);
+    } catch (error) {
+        console.error("Failed to fetch scores:", error);
+        showError();
+    } finally {
+        hideLoading();
+        lastUpdateTime = new Date();
+        updateTimestamp();
     }
+}
+
+// Process ESPN API data
+function processData(data) {
+    if (!data?.content?.matches) {
+        throw new Error("Invalid data structure from API");
+    }
+
+    const now = new Date();
+    const allMatches = data.content.matches;
     
-    h1 {
-        font-size: 1.5rem;
-    }
+    // Filter IPL matches
+    const iplMatches = allMatches.filter(match => 
+        match.series?.name?.includes("Indian Premier League") || 
+        match.series?.id?.toString() === "313494" // IPL series ID
+    );
+
+    // Separate live and upcoming matches
+    const liveMatches = iplMatches.filter(match => match.status === "LIVE");
+    const upcomingMatches = iplMatches.filter(match => 
+        match.status === "UPCOMING" || 
+        (match.startTime && new Date(match.startTime) > now)
+    );
+
+    renderMatches(liveMatches, upcomingMatches);
 }
+
+// Render matches to the DOM
+function renderMatches(liveMatches, upcomingMatches) {
+    // Live matches
+    elements.liveMatches.innerHTML = liveMatches.length > 0
+        ? liveMatches.map(match => createMatchCard(match, true)).join("")
+        : '<div class="no-matches">No live IPL matches currently</div>';
+
+    // Upcoming matches
+    elements.upcomingMatches.innerHTML = upcomingMatches.length > 0
+        ? upcomingMatches.map(match => createMatchCard(match, false)).join("")
+        : '<div class="no-matches">No upcoming IPL matches scheduled</div>';
+}
+
+// Create match card HTML
+function createMatchCard(match, isLive) {
+    const teams = match.teams || [];
+    const startTime = match.startTime ? new Date(match.startTime) : null;
+    
+    return `
+        <div class="match-card">
+            <div class="match-header">
+                <div class="match-teams">
+                    ${teams.map(team => `
+                        <div class="team ${team.isWinner ? "winner" : ""}">
+                            <img src="${team.team.imageUrl}" alt="${team.team.abbreviation}" class="team-logo">
+                            <span>${team.team.abbreviation}</span>
+                        </div>
+                    `).join("<span>vs</span>")}
+                </div>
+                <div class="match-status">
+                    ${isLive ? "LIVE" : startTime?.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) || "UPCOMING"}
+                </div>
+            </div>
+            <div class="match-details">
+                <div class="score">${match.score || "Match not started"}</div>
+                <div class="venue">${match.venue?.name || "Venue TBD"}</div>
+                ${startTime ? `<div class="match-date">${startTime.toLocaleDateString()}</div>` : ""}
+            </div>
+        </div>
+    `;
+}
+
+// Helper functions
+function showLoading() {
+    elements.loading.style.display = "block";
+}
+
+function hideLoading() {
+    elements.loading.style.display = "none";
+}
+
+function updateTimestamp() {
+    elements.lastUpdated.textContent = lastUpdateTime.toLocaleTimeString();
+}
+
+function showError() {
+    elements.liveMatches.innerHTML = `
+        <div class="error">
+            <p>⚠️ Failed to load scores</p>
+            <button class="retry-btn" onclick="fetchScores()">Retry</button>
+        </div>
+    `;
+}
+
+// Make fetchScores available globally for manual refresh
+window.refreshScores = fetchScores;
