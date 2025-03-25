@@ -1,5 +1,5 @@
 // Free API from CricketData.org
-const API_KEY = 'YOUR_FREE_API_KEY'; // Get from https://cricketdata.org/
+const API_KEY = 'b79fa81e-03e4-4e63-9e91-dc4257be197e'; // Get from https://cricketdata.org/
 const API_URL = `https://api.cricketdata.org/v1/matches?key=${API_KEY}`;
 
 // DOM Elements
