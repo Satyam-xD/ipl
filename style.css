@@ -1,132 +1,134 @@
-// Configuration
-const API_ENDPOINT = "/api/espn";
-const REFRESH_INTERVAL = 30000; // 30 seconds
-let lastUpdateTime = null;
+:root {
+    --primary: #2c3e50;
+    --secondary: #e74c3c;
+    --accent: #f39c12;
+    --light: #ecf0f1;
+    --dark: #2c3e50;
+}
 
-// DOM Elements
-const elements = {
-    liveMatches: document.getElementById("live-matches"),
-    upcomingMatches: document.getElementById("upcoming-matches"),
-    lastUpdated: document.getElementById("last-updated"),
-    loading: document.getElementById("loading")
-};
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f5f5;
+    color: #333;
+}
 
-// Initialize
-document.addEventListener("DOMContentLoaded", () => {
-    fetchScores();
-    setInterval(fetchScores, REFRESH_INTERVAL);
-});
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
 
-// Fetch scores from our serverless function
-async function fetchScores() {
-    try {
-        showLoading();
-        const response = await fetch(API_ENDPOINT);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        processData(data);
-    } catch (error) {
-        console.error("Failed to fetch scores:", error);
-        showError();
-    } finally {
-        hideLoading();
-        lastUpdateTime = new Date();
-        updateTimestamp();
+header {
+    background-color: var(--primary);
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+#scores-container {
+    margin: 20px 0;
+}
+
+#loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.match-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.match-teams {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.match-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: white;
+}
+
+.status-live {
+    background-color: var(--secondary);
+}
+
+.status-upcoming {
+    background-color: var(--accent);
+}
+
+.match-score {
+    margin: 8px 0;
+}
+
+.match-venue {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.ad-banner {
+    background: #f1f1f1;
+    padding: 15px;
+    margin: 20px 0;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.ad-placeholder {
+    max-width: 100%;
+    height: auto;
+}
+
+.error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.retry-btn {
+    background: #e53935;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+
+.live-indicator {
+    color: var(--secondary);
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
     }
 }
-
-// Process ESPN API data
-function processData(data) {
-    if (!data?.content?.matches) {
-        throw new Error("Invalid data structure from API");
-    }
-
-    const now = new Date();
-    const allMatches = data.content.matches;
-    
-    // Filter IPL matches
-    const iplMatches = allMatches.filter(match => 
-        match.series?.name?.includes("Indian Premier League") || 
-        match.series?.id?.toString() === "313494" // IPL series ID
-    );
-
-    // Separate live and upcoming matches
-    const liveMatches = iplMatches.filter(match => match.status === "LIVE");
-    const upcomingMatches = iplMatches.filter(match => 
-        match.status === "UPCOMING" || 
-        (match.startTime && new Date(match.startTime) > now)
-    );
-
-    renderMatches(liveMatches, upcomingMatches);
-}
-
-// Render matches to the DOM
-function renderMatches(liveMatches, upcomingMatches) {
-    // Live matches
-    elements.liveMatches.innerHTML = liveMatches.length > 0
-        ? liveMatches.map(match => createMatchCard(match, true)).join("")
-        : '<div class="no-matches">No live IPL matches currently</div>';
-
-    // Upcoming matches
-    elements.upcomingMatches.innerHTML = upcomingMatches.length > 0
-        ? upcomingMatches.map(match => createMatchCard(match, false)).join("")
-        : '<div class="no-matches">No upcoming IPL matches scheduled</div>';
-}
-
-// Create match card HTML
-function createMatchCard(match, isLive) {
-    const teams = match.teams || [];
-    const startTime = match.startTime ? new Date(match.startTime) : null;
-    
-    return `
-        <div class="match-card">
-            <div class="match-header">
-                <div class="match-teams">
-                    ${teams.map(team => `
-                        <div class="team ${team.isWinner ? "winner" : ""}">
-                            <img src="${team.team.imageUrl}" alt="${team.team.abbreviation}" class="team-logo">
-                            <span>${team.team.abbreviation}</span>
-                        </div>
-                    `).join("<span>vs</span>")}
-                </div>
-                <div class="match-status">
-                    ${isLive ? "LIVE" : startTime?.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"}) || "UPCOMING"}
-                </div>
-            </div>
-            <div class="match-details">
-                <div class="score">${match.score || "Match not started"}</div>
-                <div class="venue">${match.venue?.name || "Venue TBD"}</div>
-                ${startTime ? `<div class="match-date">${startTime.toLocaleDateString()}</div>` : ""}
-            </div>
-        </div>
-    `;
-}
-
-// Helper functions
-function showLoading() {
-    elements.loading.style.display = "block";
-}
-
-function hideLoading() {
-    elements.loading.style.display = "none";
-}
-
-function updateTimestamp() {
-    elements.lastUpdated.textContent = lastUpdateTime.toLocaleTimeString();
-}
-
-function showError() {
-    elements.liveMatches.innerHTML = `
-        <div class="error">
-            <p>⚠️ Failed to load scores</p>
-            <button class="retry-btn" onclick="fetchScores()">Retry</button>
-        </div>
-    `;
-}
-
-// Make fetchScores available globally for manual refresh
-window.refreshScores = fetchScores;
