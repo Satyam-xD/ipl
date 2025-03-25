@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "public": true,
+  "rewrites": [
+    { "source": "/api/espn", "destination": "/api/espn.js" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ]
+}
