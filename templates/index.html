@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live IPL Scores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #ff4500;
+        }
+        #scores {
+            margin: 20px auto;
+            padding: 10px;
+            width: 60%;
+            background: white;
+            box-shadow: 0px 0px 10px gray;
+            border-radius: 10px;
+        }
+        .match {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .match:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Live IPL Scores</h1>
+    <div id="scores">Loading scores...</div>
+
+    <script>
+        function fetchScores() {
+            fetch('/api/live-scores')
+                .then(response => response.json())
+                .then(data => {
+                    let scoresDiv = document.getElementById('scores');
+                    scoresDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        scoresDiv.innerHTML = "<p>No live matches found.</p>";
+                    }
+
+                    data.forEach(match => {
+                        let matchDiv = document.createElement('div');
+                        matchDiv.classList.add('match');
+                        matchDiv.innerHTML = `<h3>${match.match_name}</h3>
+                                              <p><strong>Score:</strong> ${match.score}</p>
+                                              <p><strong>Status:</strong> ${match.status}</p>`;
+                        scoresDiv.appendChild(matchDiv);
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('scores').innerHTML = "<p>Failed to load scores.</p>";
+                });
+        }
+
+        // Fetch scores every 30 seconds
+        fetchScores();
+        setInterval(fetchScores, 30000);
+    </script>
+
+</body>
+</html>
