@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏏 IPL 2024 Live Scores | Free & Fast</title>
-    <meta name="description" content="Real-time IPL live scores, match schedules, and player stats">
-    <link rel="stylesheet" href="style.css">
-    <!-- Google AdSense (Replace with your own) -->
+    <title>🏏 IPL 2024 Live Scores | ESPN Data</title>
+    <link rel="stylesheet" href="/style.css">
+    <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-YOUR_ADSENSE_ID" crossorigin="anonymous"></script>
-    <!-- Favicon -->
-    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="icon" href="/assets/logo.png">
 </head>
 <body>
     <header>
         <div class="container">
-            <img src="assets/logo.png" alt="IPL Logo" class="logo">
+            <img src="/assets/logo.png" alt="IPL Logo" class="logo">
             <h1>IPL 2024 Live Scores</h1>
-            <p class="last-updated">⏱️ Last Updated: <span id="update-time">Loading...</span></p>
+            <p class="last-updated">Last updated: <span id="last-updated">Loading...</span></p>
         </div>
     </header>
 
     <main class="container">
-        <!-- Ad Banner (Top) -->
+        <!-- Top Ad Banner -->
         <div class="ad-banner">
             <ins class="adsbygoogle"
                  style="display:block"
@@ -32,33 +30,32 @@
             <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
         </div>
 
-        <!-- Live Matches Section -->
-        <section id="live-matches">
-            <h2>🔥 Live Matches</h2>
-            <div id="matches-container" class="matches-grid">
-                <div class="loading">Loading live scores...</div>
-            </div>
+        <!-- Live Matches -->
+        <section id="live-section">
+            <h2><span class="live-indicator">●</span> Live Matches</h2>
+            <div id="loading" class="loading">Loading matches...</div>
+            <div id="live-matches" class="matches-container"></div>
         </section>
 
-        <!-- Ad Banner (Middle) -->
+        <!-- Middle Ad Banner -->
         <div class="ad-banner">
-            <img src="assets/ad-placeholder.jpg" alt="Advertisement" class="ad-placeholder">
+            <img src="/assets/ad-placeholder.jpg" alt="Advertisement" class="ad-placeholder">
         </div>
 
-        <!-- Upcoming Matches Section -->
-        <section id="upcoming-matches">
-            <h2>📅 Upcoming Matches</h2>
-            <div id="upcoming-container" class="matches-grid"></div>
+        <!-- Upcoming Matches -->
+        <section id="upcoming-section">
+            <h2>Upcoming Matches</h2>
+            <div id="upcoming-matches" class="matches-container"></div>
         </section>
     </main>
 
     <footer>
         <div class="container">
-            <p>© 2024 IPL Live Scores. Not affiliated with BCCI or IPL.</p>
-            <p>Data provided by <a href="https://cricketdata.org/" target="_blank">CricketData.org</a></p>
+            <p>© 2024 IPL Live Scores | Data from ESPNcricinfo</p>
+            <p>Not affiliated with BCCI or IPL</p>
         </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="/script.js"></script>
 </body>
 </html>
